@@ -95,6 +95,7 @@ func scrapeLessons(lessons map[string]string, words *SafeMap[string]) {
 			log.Info().Msg("Now scraping each page...")
 		},
 		OnError: func(r *colly.Response, err error) {
+
 			// log.Error().Msg(r.Request.URL.String())
 		},
 		OnHTML: map[string]func(e *colly.HTMLElement){
@@ -127,7 +128,7 @@ func scrapeLessons(lessons map[string]string, words *SafeMap[string]) {
 					words.Map[lessons[decodedURL]] = listOfWords
 					words.mu.Unlock()
 				} else {
-					log.Error().Err(err)
+					log.Error().Msg(err.Error())
 				}
 
 			}},

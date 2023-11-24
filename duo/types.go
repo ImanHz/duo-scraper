@@ -17,3 +17,8 @@ type CollyConfigs struct {
 	URLS        []string
 	DomainGlob  string
 }
+
+type Error struct {
+	E     error
+	Where string
+}

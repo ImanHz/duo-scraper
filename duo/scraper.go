@@ -45,7 +45,7 @@ func (cfg *CollyConfigs) Scrape() {
 	}
 	fmt.Print("\r")
 
-	progress := make(chan error, len(cfg.URLS))
+	progress := make(chan Error, len(cfg.URLS))
 
 	c.SetRequestTimeout(time.Millisecond * time.Duration(cfg.Timeout))
 	for tag, f := range cfg.OnHTML {
@@ -68,7 +68,7 @@ func (cfg *CollyConfigs) Scrape() {
 
 	c.OnResponse(func(r *colly.Response) {
 
-		progress <- nil
+		progress <- Error{E: nil, Where: r.Request.URL.String()}
 		if cfg.OnResponse != nil {
 			cfg.OnResponse(r)
 		}
@@ -86,7 +86,7 @@ func (cfg *CollyConfigs) Scrape() {
 					r.Request.Retry()
 				} else {
 					// log.Error().Str("error loading page", err.Error())
-					progress <- err
+					progress <- Error{E: err, Where: r.Request.URL.String()}
 
 				}
 				retry++
@@ -101,13 +101,13 @@ func (cfg *CollyConfigs) Scrape() {
 
 	for _, url := range cfg.URLS {
 		if err := c.Visit(url); err != nil {
-			log.Error().Str("error visiting the url"+url, err.Error())
+			log.Error().Msg(fmt.Sprintf("error visiting %s, error: %v"+url, err))
 		}
 	}
-	errors := make([]error, 0, len(cfg.URLS))
+	errors := make([]Error, 0, len(cfg.URLS))
 	for range cfg.URLS {
 		state := <-progress
-		if state == nil {
+		if state.E == nil {
 			fmt.Print(E_GREEN)
 		} else {
 			fmt.Print(E_RED)
@@ -118,7 +118,7 @@ func (cfg *CollyConfigs) Scrape() {
 	fmt.Println()
 
 	for _, e := range errors {
-		log.Error().Msg(e.Error())
+		log.Error().Msg(fmt.Sprintf("Error in %s, error: %v", e.Where, e.E))
 	}
 	if cfg.Finally != nil {
 		cfg.Finally()
