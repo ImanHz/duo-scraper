@@ -38,8 +38,10 @@ func Start() {
 			"table.duonavbox .hlist": func(e *colly.HTMLElement) {
 				e.ForEach("a,strong", func(i int, h *colly.HTMLElement) {
 					omitSpace := strings.ReplaceAll(h.Text, " ", "_")
-					omitSpace = strings.ReplaceAll(omitSpace, "'", "%27")
-
+					// omitSpace = strings.ReplaceAll(omitSpace, "'", "\\'")
+					if !strings.Contains(omitSpace, "-") {
+						omitSpace = url.QueryEscape(omitSpace)
+					}
 					urls = append(urls, omitSpace)
 				})
 			},
@@ -122,15 +124,22 @@ func scrapeLessons(lessons map[string]string, words *SafeMap[string]) {
 				},
 				)
 
-				if decodedURL, err := url.QueryUnescape(e.Request.URL.String()); err == nil {
+				// if decodedURL, err := url.QueryUnescape(e.Request.URL.String()); err == nil {
 
-					words.mu.Lock()
-					words.Map[lessons[decodedURL]] = listOfWords
-					words.mu.Unlock()
+				words.mu.Lock()
+				if u, ok := lessons[e.Request.URL.String()]; ok {
+					words.Map[u] = listOfWords
 				} else {
-					log.Error().Msg(err.Error())
-				}
+					// fmt.Print("\010")
+					log.Debug().Msg(e.Request.URL.String() + "  " + u)
+					// fmt.Print("\033[A\033[K")
 
+				}
+				words.mu.Unlock()
+				// } else {
+				// 	log.Error().Msg(err.Error())
+				// }
+				// }
 			}},
 		Finally: func() {
 
@@ -142,7 +151,11 @@ func scrapeLessons(lessons map[string]string, words *SafeMap[string]) {
 	}
 
 	cfg.Scrape()
+	log.Debug().Msgf("we have %d urls and %d data", len(urls), len(words.Map))
 
+	// for k := range lessons {
+	// 	fmt.Println(k)
+	// }
 }
 
 // func encodeCSV(columns []string, rows *sync.Map) ([]byte, error) {

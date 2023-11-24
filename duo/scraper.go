@@ -10,9 +10,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const E_GREY = "\u26AA"
-const E_GREEN = "\U0001F7E2"
-const E_RED = "\U0001F534"
+const E_BLACK = "\u2B1B"
+const E_GREEN = "\U0001F7E9"
+const E_RED = "\U0001F7E5"
 
 func init() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
@@ -22,12 +22,12 @@ func init() {
 
 func (cfg *CollyConfigs) Scrape() {
 
-	c := colly.NewCollector()
+	c := colly.NewCollector(colly.Async(true))
 
-	if cfg.Parallelism > 0 {
-		c.Async = true
-		c.Limit(&colly.LimitRule{Parallelism: cfg.Parallelism})
-	}
+	// if cfg.Parallelism > 0 {
+	// 	c.Async = true
+	c.Limit(&colly.LimitRule{Parallelism: cfg.Parallelism})
+	// }
 
 	if cfg.DomainGlob != "" {
 		c.Limit(&colly.LimitRule{DomainGlob: cfg.DomainGlob})
@@ -40,7 +40,7 @@ func (cfg *CollyConfigs) Scrape() {
 	}
 
 	for range cfg.URLS {
-		fmt.Print(E_GREY)
+		fmt.Print(E_BLACK)
 
 	}
 	fmt.Print("\r")
